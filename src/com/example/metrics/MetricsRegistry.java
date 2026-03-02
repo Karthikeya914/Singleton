@@ -11,12 +11,11 @@ public final class MetricsRegistry implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // Used to block reflection-based multiple construction
     private static boolean constructed = false;
 
     private final Map<String, Long> counters = new HashMap<>();
 
-    // ✅ PRIVATE constructor
+    
     private MetricsRegistry() {
         if (constructed) {
             throw new RuntimeException("Use getInstance(), reflection not allowed");
@@ -24,7 +23,6 @@ public final class MetricsRegistry implements Serializable {
         constructed = true;
     }
 
-    // ✅ Lazy, thread-safe initialization (Initialization-on-demand holder)
     private static class Holder {
         private static final MetricsRegistry INSTANCE = new MetricsRegistry();
     }
@@ -33,7 +31,6 @@ public final class MetricsRegistry implements Serializable {
         return Holder.INSTANCE;
     }
 
-    // ✅ Thread-safe operations
     public synchronized void setCount(String key, long value) {
         counters.put(key, value);
     }
@@ -50,7 +47,6 @@ public final class MetricsRegistry implements Serializable {
         return Collections.unmodifiableMap(new HashMap<>(counters));
     }
 
-    // ✅ Preserve singleton on deserialization
     @Serial
     private Object readResolve() {
         return getInstance();
