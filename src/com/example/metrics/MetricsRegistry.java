@@ -11,11 +11,12 @@ public final class MetricsRegistry implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private static volatile MetricsRegistry INSTANCE;
+
     private static boolean constructed = false;
 
     private final Map<String, Long> counters = new HashMap<>();
 
-    
     private MetricsRegistry() {
         if (constructed) {
             throw new RuntimeException("Use getInstance(), reflection not allowed");
@@ -23,13 +24,19 @@ public final class MetricsRegistry implements Serializable {
         constructed = true;
     }
 
-    private static class Holder {
-        private static final MetricsRegistry INSTANCE = new MetricsRegistry();
-    }
 
     public static MetricsRegistry getInstance() {
-        return Holder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (MetricsRegistry.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new MetricsRegistry();
+                }
+            }
+        }
+
+        return INSTANCE;
     }
+
 
     public synchronized void setCount(String key, long value) {
         counters.put(key, value);
@@ -46,6 +53,7 @@ public final class MetricsRegistry implements Serializable {
     public synchronized Map<String, Long> getAll() {
         return Collections.unmodifiableMap(new HashMap<>(counters));
     }
+
 
     @Serial
     private Object readResolve() {
